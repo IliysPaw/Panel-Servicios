@@ -637,8 +637,6 @@ function poblarDesdeParseo(parsed){
     state.currentLines.push(nuevaLinea({
       tipo: l.tipo || "Grooming",
       nivel: nivel,
-      tamano: parsed.tamano || "",
-      raza: parsed.raza || "Todos",
       cantidad: cantidad || 1,
       cargos: l.cargos_adicionales || [],
     }));
@@ -656,8 +654,6 @@ function nuevaLinea(datos){
     _id: state.lineCounter,
     tipo: "Grooming",
     nivel: "Básico",
-    tamano: "",
-    raza: "Todos",
     cantidad: 1,
     cargos: [],
     precioManual: null,
@@ -694,10 +690,7 @@ function renderLineItems(){
     html += `<label>Nivel / servicio</label><select data-f="nivel">${nivelesDeTipo(line.tipo).map(n=>`<option ${n===line.nivel?'selected':''}>${n}</option>`).join('')}</select>`;
 
     if(showTamano){
-      html += `<div class="row2">`;
-      html += `<div><label>Tamaño</label><select data-f="tamano"><option value="">—</option>${["Pequeño","Mediano","Grande","Extra Grande"].map(t=>`<option ${t===line.tamano?'selected':''}>${t}</option>`).join('')}</select></div>`;
-      html += `<div><label>Raza</label><input type="text" data-f="raza" value="${line.raza||''}" placeholder="Todos"></div>`;
-      html += `</div>`;
+      html += `<p class="field-note">Usa el tamaño y la raza del cobro (arriba). Si cambian ahí, esta línea se actualiza sola.</p>`;
     }
     if(cantidadLabel){
       html += `<label>Cantidad (${cantidadLabel})</label><input type="number" min="1" data-f="cantidad" value="${line.cantidad||1}">`;
@@ -756,12 +749,14 @@ function calcularLinea(line){
   const detalles = [];
   let subtotal = 0;
   let approxFlag = false, missingFlag = false;
+  const tamanoGeneral = document.getElementById('f-tamano').value;
+  const razaGeneral = document.getElementById('f-raza').value || "Todos";
 
   if(line.precioManual!==null && line.precioManual!==undefined && line.precioManual!==''){
     subtotal = Number(line.precioManual) * (TIPOS_CON_CANTIDAD[line.tipo]?(line.cantidad||1):1);
     detalles.push(`${line.tipo} - ${line.nivel} (precio manual) x${TIPOS_CON_CANTIDAD[line.tipo]?(line.cantidad||1):1}: ${money(subtotal)}`);
   } else {
-    const base = buscarPrecio(line.tipo, line.nivel, TIPOS_CON_TAMANO.includes(line.tipo)?line.tamano:"N/A", line.raza||"Todos");
+    const base = buscarPrecio(line.tipo, line.nivel, TIPOS_CON_TAMANO.includes(line.tipo)?tamanoGeneral:"N/A", razaGeneral);
     const cant = TIPOS_CON_CANTIDAD[line.tipo] ? (line.cantidad||1) : 1;
     if(!base.encontrado){
       missingFlag = true;
@@ -774,7 +769,7 @@ function calcularLinea(line){
     }
     if(line.tipo==="Grooming" && line.cargos && line.cargos.length){
       line.cargos.forEach(c=>{
-        const addon = buscarPrecio("Grooming", c, line.tamano, "Todos");
+        const addon = buscarPrecio("Grooming", c, tamanoGeneral, "Todos");
         if(!addon.encontrado){
           missingFlag = true;
           detalles.push(`+ ${c}: sin precio definido`);
@@ -840,6 +835,9 @@ document.getElementById('btnParse').addEventListener('click', async ()=>{
   }
 });
 
+document.getElementById('f-tamano').addEventListener('change', recalcular);
+document.getElementById('f-raza').addEventListener('input', recalcular);
+
 document.getElementById('btnAddLine').addEventListener('click', ()=>{
   state.currentLines.push(nuevaLinea({tipo:"Grooming", nivel:nivelesDeTipo("Grooming")[0]}));
   renderLineItems();
@@ -863,7 +861,7 @@ document.getElementById('btnSave').addEventListener('click', ()=>{
     tamano: document.getElementById('f-tamano').value,
     raza: document.getElementById('f-raza').value,
     notas: document.getElementById('f-notas').value,
-    lineas: state.currentLines.map(l=>({tipo:l.tipo, nivel:l.nivel, tamano:l.tamano, raza:l.raza, cantidad:l.cantidad, cargos:l.cargos, precioManual:l.precioManual})),
+    lineas: state.currentLines.map(l=>({tipo:l.tipo, nivel:l.nivel, cantidad:l.cantidad, cargos:l.cargos, precioManual:l.precioManual})),
     total,
   };
   state.transactions.unshift(txn);
