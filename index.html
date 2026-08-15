@@ -518,17 +518,49 @@ function razasDeNivel(tipo,nivel,tamano){
 
 /* motor de precios: busca fila exacta, si no existe cae a raza "Todos",
    si no existe ninguna, retorna null (requiere precio manual) */
-function buscarPrecio(tipo, nivel, tamano, raza){
+function normalizarTexto(s){
+  return (s||"").toString().trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/\s+/g,' ');
+}
+function esDoodle(raza){
+  return normalizarTexto(raza).includes('doodle') && !normalizarTexto(raza).includes('no doodle');
+}
+/* motor de precios: compara raza sin distinguir mayúsculas/acentos,
+   reconoce subrazas de doodle (goldendoodle, labradoodle, mini doodle...)
+   como raza "Doodle" del catálogo, y usa "No Doodle" como genérico
+   cuando esa combinación no tiene fila "Todos". Si no hay ninguna
+   coincidencia, retorna null (requiere precio manual). */
+function buscarPrecio(tipo, nivel, tamano, razaInput){
   const rows = state.catalog.filter(r=>r.tipo===tipo && r.nivel===nivel);
   if(rows.length===0) return {precio:null, exacto:false, encontrado:false};
   if(tamano==="N/A" || !tamano){
     const r = rows[0];
     return {precio:r.precio, exacto:true, encontrado:r.precio!==null};
   }
-  let r = rows.find(r=>r.tamano===tamano && r.raza===raza);
-  if(r) return {precio:r.precio, exacto:true, encontrado:r.precio!==null};
-  r = rows.find(r=>r.tamano===tamano && r.raza==="Todos");
+  const rowsTamano = rows.filter(r=>r.tamano===tamano);
+  const razaNorm = normalizarTexto(razaInput);
+  const esRazaDoodle = esDoodle(razaInput);
+
+  // 1) Familia doodle (goldendoodle, labradoodle, doodle mix...) -> fila "Doodle"
+  if(esRazaDoodle){
+    let r = rowsTamano.find(r=>normalizarTexto(r.raza)==='doodle');
+    if(r) return {precio:r.precio, exacto:true, encontrado:r.precio!==null};
+  }
+  // 2) Coincidencia exacta con la raza dictada (sin distinguir mayúsculas/acentos)
+  if(razaNorm){
+    let r = rowsTamano.find(r=>normalizarTexto(r.raza)===razaNorm);
+    if(r) return {precio:r.precio, exacto:true, encontrado:r.precio!==null};
+  }
+  // 3) Si no es doodle, "No Doodle" funciona como el genérico de esa combinación
+  if(!esRazaDoodle){
+    let r = rowsTamano.find(r=>normalizarTexto(r.raza)==='no doodle');
+    if(r) return {precio:r.precio, exacto:false, encontrado:r.precio!==null};
+  }
+  // 4) Genérico "Todos"
+  let r = rowsTamano.find(r=>normalizarTexto(r.raza)==='todos');
   if(r) return {precio:r.precio, exacto:false, encontrado:r.precio!==null};
+
   return {precio:null, exacto:false, encontrado:false};
 }
 
