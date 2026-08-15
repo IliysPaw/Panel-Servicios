@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Panel de Servicios</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F8F6F0;
+    --surface:#FFFFFF;
+    --ink:#20261F;
+    --ink-soft:#5B6358;
+    --line:#E4E0D4;
+    --forest:#1F3D2B;
+    --forest-dark:#152A1D;
+    --sand:#EFEADB;
+    --marigold:#E8A33D;
+    --marigold-dark:#C7811F;
+    --clay:#B5502F;
+    --warn-bg:#FBEEDD;
+    --warn-ink:#8A5A16;
+    --ok-bg:#E7F1E8;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(31,61,43,0.06), 0 4px 16px rgba(31,61,43,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding-bottom:78px;
+  }
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  header.top{
+    background:var(--forest);
+    color:#F4F1E6;
+    padding:18px 20px 16px;
+    position:sticky;top:0;z-index:20;
+  }
+  header.top .brand{font-size:1.15rem;letter-spacing:.01em;}
+  header.top .tabline{font-size:.78rem;color:#C9D4C6;margin-top:2px;font-family:'Inter';}
+  main{max-width:520px;margin:0 auto;padding:18px 16px 24px;}
+  .view{display:none;}
+  .view.active{display:block;}
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px;
+    margin-bottom:16px;
+    box-shadow:var(--shadow);
+  }
+  .card h2{font-size:1.05rem;margin-bottom:4px;}
+  .hint{color:var(--ink-soft);font-size:.85rem;line-height:1.45;margin:6px 0 14px;}
+  label{display:block;font-size:.78rem;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 6px;}
+  label:first-child{margin-top:0;}
+  textarea, input[type=text], input[type=number], input[type=date], select{
+    width:100%;
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    padding:11px 12px;
+    font-family:'Inter';
+    font-size:.95rem;
+    background:#FDFCF9;
+    color:var(--ink);
+  }
+  textarea{min-height:110px;resize:vertical;line-height:1.5;}
+  textarea:focus, input:focus, select:focus{outline:2px solid var(--marigold);outline-offset:1px;border-color:var(--marigold);}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  button{
+    font-family:'Inter';font-weight:600;font-size:.92rem;
+    border:none;border-radius:10px;padding:13px 18px;cursor:pointer;
+    transition:transform .05s ease, opacity .15s ease;
+  }
+  button:active{transform:scale(0.98);}
+  .btn-primary{background:var(--marigold);color:#241505;width:100%;}
+  .btn-primary:hover{background:var(--marigold-dark);}
+  .btn-primary:disabled{opacity:.55;cursor:not-allowed;}
+  .btn-secondary{background:var(--sand);color:var(--forest);width:100%;}
+  .btn-ghost{background:transparent;color:var(--forest);border:1.5px solid var(--forest);width:100%;}
+  .btn-danger-ghost{background:transparent;color:var(--clay);border:1.5px solid var(--clay);font-size:.8rem;padding:8px 12px;}
+  .btn-sm{width:auto;font-size:.8rem;padding:8px 14px;}
+  .mic-hint{
+    display:flex;gap:8px;align-items:flex-start;
+    background:var(--sand);border-radius:10px;padding:10px 12px;margin-bottom:12px;
+    font-size:.82rem;color:var(--forest);line-height:1.4;
+  }
+  .mic-hint svg{flex:none;margin-top:1px;}
+  .lineitem{
+    border:1.5px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;background:#FDFCF9;
+  }
+  .lineitem-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+  .lineitem-head .tag{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--forest);background:var(--ok-bg);padding:3px 8px;border-radius:6px;}
+  .remove-line{background:none;border:none;color:var(--clay);font-size:.78rem;font-weight:600;padding:4px;cursor:pointer;}
+  .checkrow{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:.88rem;}
+  .checkrow input{width:auto;}
+  .subtotal-line{display:flex;justify-content:space-between;font-size:.85rem;color:var(--ink-soft);margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);}
+  .subtotal-line b{color:var(--ink);font-family:'JetBrains Mono';}
+  .flag{display:inline-block;font-size:.68rem;font-weight:700;padding:2px 7px;border-radius:5px;margin-left:6px;vertical-align:middle;}
+  .flag-approx{background:var(--warn-bg);color:var(--warn-ink);}
+  .flag-missing{background:#FBE3DD;color:var(--clay);}
+  /* receipt / ticket */
+  .receipt{
+    background:var(--forest);color:#F4F1E6;
+    border-radius:var(--radius);
+    padding:22px 20px 18px;
+    position:relative;
+    margin-bottom:16px;
+    background-image:
+      radial-gradient(circle at 8px 8px, var(--bg) 4px, transparent 4.5px);
+    background-size:100% 100%;
+  }
+  .receipt::before,.receipt::after{
+    content:"";position:absolute;left:0;right:0;height:14px;
+    background:
+      radial-gradient(circle at 10px 0, transparent 8px, var(--forest) 8.5px) repeat-x;
+    background-size:20px 16px;
+  }
+  .receipt::before{top:-1px;transform:rotate(180deg);}
+  .receipt::after{bottom:-1px;}
+  .receipt .r-label{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#B9C7B5;}
+  .receipt .r-total{font-family:'Fraunces';font-size:2.3rem;font-weight:700;margin:2px 0 14px;}
+  .receipt .r-row{display:flex;justify-content:space-between;font-size:.85rem;padding:5px 0;color:#DCE5D9;border-bottom:1px dashed rgba(244,241,230,.18);font-family:'JetBrains Mono';}
+  .receipt .r-row.head{color:#F4F1E6;font-weight:600;border-bottom-color:rgba(244,241,230,.35);}
+  .empty{text-align:center;color:var(--ink-soft);padding:36px 16px;font-size:.9rem;}
+  .empty b{display:block;font-family:'Fraunces';font-size:1.15rem;color:var(--ink);margin-bottom:4px;}
+  .txn{
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;
+    display:flex;justify-content:space-between;align-items:flex-start;gap:10px;
+  }
+  .txn .tname{font-weight:600;font-size:.95rem;}
+  .txn .tmeta{font-size:.78rem;color:var(--ink-soft);margin-top:2px;line-height:1.4;}
+  .txn .tprice{font-family:'JetBrains Mono';font-weight:600;font-size:1rem;color:var(--forest);white-space:nowrap;}
+  .summary-strip{display:flex;gap:10px;margin-bottom:16px;}
+  .summary-box{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;}
+  .summary-box .slabel{font-size:.72rem;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;}
+  .summary-box .sval{font-family:'JetBrains Mono';font-size:1.15rem;font-weight:600;color:var(--forest);margin-top:2px;}
+  nav.tabs{
+    position:fixed;bottom:0;left:0;right:0;
+    background:var(--surface);border-top:1px solid var(--line);
+    display:flex;z-index:30;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  nav.tabs button{
+    flex:1;background:none;border:none;border-radius:0;
+    padding:12px 4px 10px;color:var(--ink-soft);font-size:.72rem;font-weight:600;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+  }
+  nav.tabs button.active{color:var(--forest);}
+  nav.tabs button svg{width:21px;height:21px;}
+  .toast{
+    position:fixed;bottom:88px;left:50%;transform:translateX(-50%);
+    background:var(--forest);color:#F4F1E6;padding:11px 20px;border-radius:30px;
+    font-size:.85rem;font-weight:600;box-shadow:var(--shadow);z-index:50;
+    opacity:0;pointer-events:none;transition:opacity .2s ease, bottom .2s ease;
+  }
+  .toast.show{opacity:1;bottom:98px;}
+  .catalog-group{margin-bottom:18px;}
+  .catalog-group h3{font-size:.85rem;color:var(--forest);text-transform:uppercase;letter-spacing:.03em;margin-bottom:8px;}
+  .catalog-row{display:grid;grid-template-columns:1fr 1fr 1fr 70px 26px;gap:6px;align-items:center;margin-bottom:6px;}
+  .catalog-row input{padding:7px 8px;font-size:.8rem;}
+  .catalog-row .del{background:none;border:none;color:var(--clay);font-size:1rem;cursor:pointer;padding:0;}
+  .banner-warn{
+    background:var(--warn-bg);color:var(--warn-ink);border-radius:10px;padding:12px 14px;
+    font-size:.82rem;line-height:1.5;margin-bottom:16px;
+  }
+  .banner-warn b{display:block;margin-bottom:4px;}
+  .spinner{
+    display:inline-block;width:15px;height:15px;border:2px solid rgba(36,21,5,.3);
+    border-top-color:#241505;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-3px;margin-right:6px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .section-title{margin:22px 0 4px;}
+  .section-title:first-child{margin-top:0;}
+  .field-note{font-size:.75rem;color:var(--ink-soft);margin-top:-2px;margin-bottom:12px;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand" id="brandName">Panel de Servicios</div>
+  <div class="tabline" id="tabline">Dictar servicio</div>
+</header>
+
+<main>
+
+  <!-- ===================== DICTAR ===================== -->
+  <section class="view active" id="view-dictar">
+
+    <div class="card" id="dictado-libre-card">
+      <h2>Dictado libre</h2>
+      <p class="hint">Dicta todo de corrido, como hablas normalmente — Spanglish, acento boricua, como sea. Toca el campo, usa el micrófono del teclado, y habla.</p>
+      <div class="mic-hint">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1F3D2B" stroke-width="2"><path d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3z"/><path d="M19 11a7 7 0 01-14 0M12 18v3"/></svg>
+        <span>Ejemplo: "Omar trajo al Goku pa'l full grooming, es un yorkie pequeño, y book hospedaje del 14 al 17 de agosto"</span>
+      </div>
+      <textarea id="dictado" placeholder="Dicta o escribe aquí..."></textarea>
+      <div style="height:14px"></div>
+      <button class="btn-primary" id="btnParse">Interpretar y llenar</button>
+      <div id="noKeyNotice" class="banner-warn" style="display:none;margin-top:12px">
+        <b>Falta configurar el dictado inteligente</b>
+        <span>Ve a Configuración y agrega tu clave de API de Anthropic para que esta parte funcione. Mientras tanto, llena los campos de abajo directamente.</span>
+      </div>
+      <div id="parseError" style="display:none" class="banner-warn" style="margin-top:12px"></div>
+    </div>
+
+    <div class="mic-hint">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1F3D2B" stroke-width="2"><path d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3z"/><path d="M19 11a7 7 0 01-14 0M12 18v3"/></svg>
+      <span>O llena los campos directamente — toca cualquier campo de texto y usa el micrófono del teclado para dictar en vez de escribir.</span>
+    </div>
+
+    <div class="card" id="review-card">
+      <h2>Nuevo cobro</h2>
+
+      <div class="row2">
+        <div>
+          <label for="f-dueno">Dueño</label>
+          <input type="text" id="f-dueno">
+        </div>
+        <div>
+          <label for="f-mascota">Mascota</label>
+          <input type="text" id="f-mascota">
+        </div>
+      </div>
+      <div class="row2">
+        <div>
+          <label for="f-tamano">Tamaño</label>
+          <select id="f-tamano">
+            <option value="">—</option>
+            <option>Pequeño</option>
+            <option>Mediano</option>
+            <option>Grande</option>
+            <option>Extra Grande</option>
+          </select>
+        </div>
+        <div>
+          <label for="f-raza">Raza</label>
+          <input type="text" id="f-raza" placeholder="Todos">
+        </div>
+      </div>
+      <div class="row2">
+        <div>
+          <label for="f-fecha-servicio">Fecha del servicio</label>
+          <input type="date" id="f-fecha-servicio">
+        </div>
+        <div>
+          <label for="f-notas">Notas</label>
+          <input type="text" id="f-notas" placeholder="Opcional">
+        </div>
+      </div>
+
+      <div class="section-title">
+        <label style="margin-bottom:0">Líneas de servicio</label>
+      </div>
+      <div id="lineitems"></div>
+      <button class="btn-ghost btn-sm" id="btnAddLine" type="button">+ Añadir línea de servicio</button>
+    </div>
+
+    <div class="receipt" id="receipt-card">
+      <div class="r-label">Total a cobrar</div>
+      <div class="r-total mono" id="r-total">$0.00</div>
+      <div id="r-lines"></div>
+    </div>
+
+    <button class="btn-primary" id="btnSave">Guardar cobro</button>
+    <button class="btn-secondary" id="btnCancelReview" type="button" style="margin-top:10px">Limpiar formulario</button>
+  </section>
+
+  <!-- ===================== HISTORIAL ===================== -->
+  <section class="view" id="view-historial">
+    <div class="banner-warn" id="backup-reminder" style="display:none;align-items:center;justify-content:space-between;gap:10px">
+      <span><b style="display:block">Hora de respaldar</b><span id="backup-reminder-msg"></span></span>
+      <button class="btn-secondary btn-sm" id="btnBackupFromReminder" type="button" style="flex:none">Respaldar ahora</button>
+    </div>
+    <div class="summary-strip">
+      <div class="summary-box">
+        <div class="slabel">Servicios</div>
+        <div class="sval mono" id="sum-count">0</div>
+      </div>
+      <div class="summary-box">
+        <div class="slabel">Total cobrado</div>
+        <div class="sval mono" id="sum-total">$0.00</div>
+      </div>
+    </div>
+    <div id="txn-list"></div>
+  </section>
+
+  <!-- ===================== CONFIGURACIÓN ===================== -->
+  <section class="view" id="view-config">
+
+    <div class="card">
+      <h2>Negocio</h2>
+      <label for="cfg-name">Nombre del negocio</label>
+      <input type="text" id="cfg-name" placeholder="Ej. Consentidos Pet Care">
+      <button class="btn-secondary btn-sm" id="btnSaveName" style="margin-top:12px">Guardar nombre</button>
+    </div>
+
+    <div class="card">
+      <h2>Dictado inteligente</h2>
+      <p class="hint">Para que el "Dictado libre" en la pestaña Dictar entienda lo que dictas (incluyendo Spanglish y acento boricua), necesitas tu propia clave de API de Anthropic. Se obtiene gratis en <span class="mono" style="font-size:.82rem">console.anthropic.com</span> → API Keys, y el costo por cada dictado es una fracción de centavo. La clave se guarda solo en este teléfono, nunca sale de aquí salvo hacia Anthropic para interpretar el dictado.</p>
+      <label for="cfg-apikey">Clave de API de Anthropic</label>
+      <input type="text" id="cfg-apikey" placeholder="sk-ant-...">
+      <button class="btn-secondary btn-sm" id="btnSaveKey" style="margin-top:12px">Guardar clave</button>
+    </div>
+
+    <div class="banner-warn" id="pending-banner" style="display:none">
+      <b>Precios pendientes de definir</b>
+      <span id="pending-list"></span>
+    </div>
+
+    <div class="card">
+      <h2>Lista de precios</h2>
+      <p class="hint">Edita cualquier precio. Los marcados como supuesto los definí yo por falta de dato — corrígelos cuando tengas la tarifa real.</p>
+      <div id="catalog-editor"></div>
+      <button class="btn-ghost btn-sm" id="btnAddRow" type="button" style="margin-top:6px">+ Añadir renglón de precio</button>
+    </div>
+
+    <div class="card">
+      <h2>Datos</h2>
+      <p class="hint">Todo lo que guardes queda almacenado en este teléfono, dentro de este navegador (Chrome o Safari). Si borras los datos de navegación, cambias de navegador o de teléfono, esta información no viaja automáticamente contigo — usa "Exportar respaldo" para guardar una copia y "Importar respaldo" para restaurarla en otro lugar. Por seguridad, la clave de API nunca se incluye en el respaldo — se guarda solo en este teléfono.</p>
+      <label for="cfg-backup-days" style="margin-top:14px">Recordarme cada</label>
+      <select id="cfg-backup-days">
+        <option value="3">3 días</option>
+        <option value="7">7 días</option>
+        <option value="14">14 días</option>
+        <option value="30">30 días</option>
+      </select>
+      <p class="field-note" id="cfg-last-backup">Todavía no has hecho ningún respaldo.</p>
+      <div class="row2">
+        <button class="btn-secondary btn-sm" id="btnExport" type="button">Exportar respaldo</button>
+        <button class="btn-ghost btn-sm" id="btnImport" type="button">Importar respaldo</button>
+      </div>
+      <input type="file" id="fileImport" accept="application/json" style="display:none">
+      <div style="height:14px"></div>
+      <button class="btn-danger-ghost" id="btnResetCatalog" type="button">Restaurar lista de precios original</button>
+    </div>
+
+    <div class="card">
+      <h2>Que el respaldo llegue solo a la nube</h2>
+      <p class="hint">La app no puede escribir en Google Drive, OneDrive o iCloud sin tu autorización explícita — pero puedes hacer que cada respaldo caiga automáticamente en la nube, apuntando la carpeta de descargas de tu teléfono a una carpeta que ya se sincroniza sola:</p>
+      <p class="hint" style="margin-bottom:4px"><b>iPhone (Safari):</b> Ajustes → Safari → Descargas → elige "iCloud Drive" (o una carpeta dentro de iCloud Drive).</p>
+      <p class="hint" style="margin-bottom:0"><b>Android (Chrome):</b> Chrome → ⋮ → Configuración → Descargas → cambia la ubicación a tu carpeta de Google Drive (aparece como opción si tienes la app de Drive instalada).</p>
+    </div>
+
+  </section>
+
+</main>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="dictar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3z"/><path d="M19 11a7 7 0 01-14 0M12 18v4M8 22h8"/></svg>
+    Dictar
+  </button>
+  <button class="tab-btn" data-tab="historial">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
+    Historial
+  </button>
+  <button class="tab-btn" data-tab="config">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    Configurar
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   CATÁLOGO DE PRECIOS — reconstruido de Lista_de_precios.xlsx,
+   con las tarifas de Pulgas y Garrapatas, Full + Salchicha y
+   Baño independiente (por tamaño, incl. Extra Grande) confirmadas.
+   ============================================================ */
+const CATALOG_DEFAULT = [
+  {id:1,  tipo:"Grooming", nivel:"Básico", tamano:"Pequeño", raza:"Todos", precio:45},
+  {id:2,  tipo:"Grooming", nivel:"Básico", tamano:"Mediano", raza:"Todos", precio:65},
+  {id:3,  tipo:"Grooming", nivel:"Básico", tamano:"Grande",  raza:"Todos", precio:85},
+  {id:4,  tipo:"Grooming", nivel:"Wilmarie Básico", tamano:"Pequeño", raza:"Todos", precio:25},
+  {id:5,  tipo:"Grooming", nivel:"Wilmarie Full", tamano:"Pequeño", raza:"Todos", precio:50},
+  {id:6,  tipo:"Grooming", nivel:"Geraldine Básico", tamano:"Pequeño", raza:"Todos", precio:30},
+  {id:7,  tipo:"Grooming", nivel:"Básico", tamano:"Pequeño", raza:"Salchicha", precio:30},
+  {id:8,  tipo:"Grooming", nivel:"Full", tamano:"Pequeño", raza:"Todos", precio:65},
+  {id:9,  tipo:"Grooming", nivel:"Full", tamano:"Mediano", raza:"Todos", precio:85},
+  {id:10, tipo:"Grooming", nivel:"Full", tamano:"Grande",  raza:"No Doodle", precio:100},
+  {id:11, tipo:"Grooming", nivel:"Full", tamano:"Grande",  raza:"Doodle", precio:150},
+  {id:12, tipo:"Grooming", nivel:"Reef", tamano:"Grande",  raza:"Doodle", precio:65},
+  {id:13, tipo:"Grooming", nivel:"Bali", tamano:"Pequeño", raza:"Schnauzer", precio:50},
+  {id:14, tipo:"Grooming", nivel:"Sam", tamano:"Pequeño", raza:"Sato", precio:45},
+  {id:15, tipo:"Grooming", nivel:"Deshedding", tamano:"Pequeño", raza:"Todos", precio:15},
+  {id:16, tipo:"Grooming", nivel:"Deshedding", tamano:"Mediano", raza:"Todos", precio:15},
+  {id:17, tipo:"Grooming", nivel:"Deshedding", tamano:"Grande",  raza:"Todos", precio:15},
+  {id:18, tipo:"Grooming", nivel:"Nudos", tamano:"Pequeño", raza:"Todos", precio:15},
+  {id:19, tipo:"Grooming", nivel:"Nudos", tamano:"Mediano", raza:"Todos", precio:15},
+  {id:20, tipo:"Grooming", nivel:"Nudos", tamano:"Grande",  raza:"Todos", precio:15},
+  {id:21, tipo:"Grooming", nivel:"Pulgas y Garrapatas", tamano:"Pequeño", raza:"Todos", precio:25},
+  {id:22, tipo:"Grooming", nivel:"Pulgas y Garrapatas", tamano:"Mediano", raza:"Todos", precio:25},
+  {id:23, tipo:"Grooming", nivel:"Pulgas y Garrapatas", tamano:"Grande",  raza:"Todos", precio:25},
+  {id:24, tipo:"Grooming", nivel:"Baño", tamano:"Pequeño", raza:"Todos", precio:25},
+  {id:25, tipo:"Grooming", nivel:"Baño", tamano:"Mediano", raza:"Todos", precio:45},
+  {id:26, tipo:"Grooming", nivel:"Baño", tamano:"Grande",  raza:"Todos", precio:65},
+  {id:38, tipo:"Grooming", nivel:"Baño", tamano:"Extra Grande", raza:"Todos", precio:85},
+  {id:39, tipo:"Grooming", nivel:"Full", tamano:"Pequeño", raza:"Salchicha", precio:30},
+  {id:27, tipo:"Daycare", nivel:"Básico", tamano:"N/A", raza:"N/A", precio:20},
+  {id:28, tipo:"Hospedaje", nivel:"Regular", tamano:"N/A", raza:"N/A", precio:35},
+  {id:29, tipo:"Hospedaje", nivel:"Feriado", tamano:"N/A", raza:"N/A", precio:45},
+  {id:30, tipo:"Hospedaje", nivel:"Cliente Recurrente", tamano:"N/A", raza:"N/A", precio:30},
+  {id:31, tipo:"Hospedaje", nivel:"Amigos Regular", tamano:"N/A", raza:"N/A", precio:20},
+  {id:32, tipo:"Hospedaje", nivel:"Amigos Feriado", tamano:"N/A", raza:"N/A", precio:30},
+  {id:33, tipo:"Domicilio", nivel:"Regular", tamano:"N/A", raza:"N/A", precio:12.5},
+  {id:34, tipo:"Domicilio", nivel:"Feriado", tamano:"N/A", raza:"N/A", precio:22.5},
+  {id:35, tipo:"Entrenamiento", nivel:"Básico", tamano:"N/A", raza:"N/A", precio:750},
+  {id:36, tipo:"Uñas", nivel:"Básico", tamano:"N/A", raza:"N/A", precio:15},
+  {id:37, tipo:"Uñas", nivel:"Especial", tamano:"N/A", raza:"N/A", precio:12},
+];
+
+const TIPOS = ["Grooming","Daycare","Hospedaje","Domicilio","Entrenamiento","Uñas"];
+const TIPOS_CON_TAMANO = ["Grooming"];
+const TIPOS_CON_CANTIDAD = {"Daycare":"días","Hospedaje":"días","Domicilio":"visitas"};
+
+let state = {
+  businessName: "Panel de Servicios",
+  apiKey: "",
+  backupReminderDays: 7,
+  lastBackupAt: null,
+  catalog: CATALOG_DEFAULT,
+  transactions: [],
+  currentLines: [],
+  lineCounter: 0,
+};
+
+/* ---------- almacenamiento (local del navegador, no depende de Claude) ---------- */
+const LS_PREFIX = 'groomingApp_v1_';
+function lsGet(key){
+  try{
+    const raw = localStorage.getItem(LS_PREFIX+key);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ console.warn('No se pudo leer', key, e); return null; }
+}
+function lsSet(key, value){
+  try{
+    localStorage.setItem(LS_PREFIX+key, JSON.stringify(value));
+    return true;
+  }catch(e){ console.warn('No se pudo guardar', key, e); toast('No se pudo guardar — revisa el espacio de almacenamiento del navegador'); return false; }
+}
+function loadAll(){
+  const s = lsGet('settings');
+  if(s && s.businessName) state.businessName = s.businessName;
+  if(s && s.apiKey) state.apiKey = s.apiKey;
+  if(s && s.backupReminderDays) state.backupReminderDays = s.backupReminderDays;
+  if(s && s.lastBackupAt) state.lastBackupAt = s.lastBackupAt;
+  const c = lsGet('catalog');
+  state.catalog = (c && c.length) ? c : CATALOG_DEFAULT;
+  const t = lsGet('transactions');
+  state.transactions = t || [];
+  document.getElementById('brandName').textContent = state.businessName;
+  document.getElementById('cfg-name').value = state.businessName;
+  document.getElementById('cfg-apikey').value = state.apiKey;
+  document.getElementById('cfg-backup-days').value = state.backupReminderDays;
+  updateKeyNotice();
+}
+function saveSettings(){
+  lsSet('settings', {businessName: state.businessName, apiKey: state.apiKey, backupReminderDays: state.backupReminderDays, lastBackupAt: state.lastBackupAt});
+}
+function updateKeyNotice(){
+  document.getElementById('noKeyNotice').style.display = state.apiKey ? 'none' : 'block';
+}
+function diasDesdeRespaldo(){
+  if(!state.lastBackupAt) return Infinity;
+  return Math.floor((Date.now() - new Date(state.lastBackupAt).getTime()) / 86400000);
+}
+function updateBackupReminder(){
+  const dias = diasDesdeRespaldo();
+  const overdue = dias >= state.backupReminderDays;
+  const banner = document.getElementById('backup-reminder');
+  if(banner){
+    banner.style.display = overdue ? 'flex' : 'none';
+    const msg = document.getElementById('backup-reminder-msg');
+    if(msg) msg.textContent = state.lastBackupAt
+      ? `No has hecho un respaldo en ${dias} días.`
+      : `Todavía no has hecho ningún respaldo.`;
+  }
+  const cfgLast = document.getElementById('cfg-last-backup');
+  if(cfgLast) cfgLast.textContent = state.lastBackupAt
+    ? `Último respaldo: hace ${dias} día${dias===1?'':'s'}`
+    : `Todavía no has hecho ningún respaldo.`;
+}
+function saveCatalog(){
+  lsSet('catalog', state.catalog);
+}
+function saveTransactions(){
+  lsSet('transactions', state.transactions);
+}
+
+/* ---------- utilidades ---------- */
+function money(n){
+  if(n===null||n===undefined||isNaN(n)) return "—";
+  return "$" + Number(n).toFixed(2);
+}
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function nivelesDeTipo(tipo){
+  const set = new Set(state.catalog.filter(r=>r.tipo===tipo).map(r=>r.nivel));
+  return [...set];
+}
+function razasDeNivel(tipo,nivel,tamano){
+  const set = new Set(state.catalog.filter(r=>r.tipo===tipo && r.nivel===nivel && (r.tamano===tamano||r.tamano==="N/A")).map(r=>r.raza));
+  return [...set];
+}
+
+/* motor de precios: busca fila exacta, si no existe cae a raza "Todos",
+   si no existe ninguna, retorna null (requiere precio manual) */
+function buscarPrecio(tipo, nivel, tamano, raza){
+  const rows = state.catalog.filter(r=>r.tipo===tipo && r.nivel===nivel);
+  if(rows.length===0) return {precio:null, exacto:false, encontrado:false};
+  if(tamano==="N/A" || !tamano){
+    const r = rows[0];
+    return {precio:r.precio, exacto:true, encontrado:r.precio!==null};
+  }
+  let r = rows.find(r=>r.tamano===tamano && r.raza===raza);
+  if(r) return {precio:r.precio, exacto:true, encontrado:r.precio!==null};
+  r = rows.find(r=>r.tamano===tamano && r.raza==="Todos");
+  if(r) return {precio:r.precio, exacto:false, encontrado:r.precio!==null};
+  return {precio:null, exacto:false, encontrado:false};
+}
+
+/* ============================================================
+   DICTADO LIBRE — interpretación con IA usando la clave propia
+   del usuario (BYOK), llamada directa desde el navegador.
+   ============================================================ */
+async function interpretarDictado(texto){
+  if(!state.apiKey) throw new Error("NO_KEY");
+  const niveles = [...new Set(state.catalog.map(r=>`${r.tipo}:${r.nivel}`))].join(", ");
+  const hoy = new Date().toISOString().slice(0,10);
+  const sys = `Eres un asistente que convierte dictado hablado de un negocio de grooming y cuido de mascotas en Puerto Rico en JSON estructurado.
+
+El dictado puede venir en español, en inglés, o en Spanglish con acento puertorriqueño — mezclando ambos idiomas en la misma oración, con préstamos del inglés (grooming, book, daycare, drop off, pick up), contracciones y expresiones boricuas (pa'l, pa'lla, na' más, en lo que, ahorita, mai, brutal, wepa) y con variación fonética típica de dictado por voz en PR. Interpreta el significado, no la ortografía exacta — si algo suena como "un yorki chiquito" o "un yorkshire pequeñito", ambos significan raza Yorkshire, tamaño Pequeño.
+
+Hoy es ${hoy} (usa esto para interpretar fechas relativas como "mañana", "el viernes que viene", "next Friday").
+Tipos de servicio válidos: Grooming, Daycare, Hospedaje, Domicilio, Entrenamiento, Uñas.
+Niveles de servicio conocidos (tipo:nivel) que existen en el catálogo, incluyendo tarifas especiales por nombre de cliente: ${niveles}.
+Si el dictado menciona un nombre que coincide con uno de estos niveles especiales, sugiere ese nivel exacto.
+El tamaño "Extra Grande" solo existe para el servicio de Baño independiente (tipo Grooming, nivel Baño) — no lo sugieras para otros niveles de Grooming.
+Responde ÚNICAMENTE con un objeto JSON válido, sin texto adicional, sin marcadores de código, con esta forma exacta:
+{"dueno":string|null,"mascota":string|null,"tamano":"Pequeño"|"Mediano"|"Grande"|"Extra Grande"|null,"raza":string|null,"fecha_servicio":"YYYY-MM-DD"|null,"notas":string|null,
+"lineas":[{"tipo":string,"nivel_sugerido":string|null,"cargos_adicionales":string[],"cantidad":number|null,"fecha_inicio":"YYYY-MM-DD"|null,"fecha_fin":"YYYY-MM-DD"|null}]}
+cargos_adicionales solo aplica a líneas de tipo Grooming y solo puede contener: "Deshedding","Nudos","Pulgas y Garrapatas".
+Si el dictado no da información suficiente para un campo, usa null. No inventes datos que no fueron dictados.`;
+
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "x-api-key": state.apiKey,
+      "anthropic-version":"2023-06-01",
+      "anthropic-dangerous-direct-browser-access":"true",
+    },
+    body: JSON.stringify({
+      model:"claude-sonnet-5",
+      max_tokens:1000,
+      system: sys,
+      messages:[{role:"user", content:texto}]
+    })
+  });
+  if(resp.status===401) throw new Error("La clave de API no es válida — revísala en Configuración");
+  if(!resp.ok){
+    let detail = "";
+    try{ const errBody = await resp.json(); detail = errBody?.error?.message || ""; }catch(e){}
+    throw new Error("La solicitud falló (" + resp.status + ")" + (detail?": "+detail:""));
+  }
+  const data = await resp.json();
+  const textBlock = (data.content||[]).find(b=>b.type==="text");
+  if(!textBlock) throw new Error("La IA no devolvió texto interpretable");
+  let clean = textBlock.text.trim().replace(/^```json/,'').replace(/^```/,'').replace(/```$/,'').trim();
+  return JSON.parse(clean);
+}
+
+function poblarDesdeParseo(parsed){
+  document.getElementById('f-dueno').value = parsed.dueno || "";
+  document.getElementById('f-mascota').value = parsed.mascota || "";
+  document.getElementById('f-tamano').value = parsed.tamano || "";
+  document.getElementById('f-raza').value = parsed.raza || "";
+  document.getElementById('f-fecha-servicio').value = parsed.fecha_servicio || new Date().toISOString().slice(0,10);
+  document.getElementById('f-notas').value = parsed.notas || "";
+
+  state.currentLines = [];
+  const lineasFuente = (parsed.lineas && parsed.lineas.length) ? parsed.lineas : [{tipo:"Grooming", nivel_sugerido:"Básico", cargos_adicionales:[], cantidad:1}];
+  lineasFuente.forEach(l=>{
+    let cantidad = l.cantidad;
+    if((l.tipo==="Hospedaje") && l.fecha_inicio && l.fecha_fin){
+      const d1 = new Date(l.fecha_inicio), d2 = new Date(l.fecha_fin);
+      const dias = Math.round((d2-d1)/86400000)+1;
+      if(dias>0) cantidad = dias;
+    }
+    const nivelesDisponibles = nivelesDeTipo(l.tipo);
+    const nivel = (l.nivel_sugerido && nivelesDisponibles.includes(l.nivel_sugerido)) ? l.nivel_sugerido : (nivelesDisponibles[0]||"");
+    state.currentLines.push(nuevaLinea({
+      tipo: l.tipo || "Grooming",
+      nivel: nivel,
+      tamano: parsed.tamano || "",
+      raza: parsed.raza || "Todos",
+      cantidad: cantidad || 1,
+      cargos: l.cargos_adicionales || [],
+    }));
+  });
+  renderLineItems();
+  recalcular();
+}
+
+/* ============================================================
+   LÍNEAS DE SERVICIO
+   ============================================================ */
+function nuevaLinea(datos){
+  state.lineCounter++;
+  return Object.assign({
+    _id: state.lineCounter,
+    tipo: "Grooming",
+    nivel: "Básico",
+    tamano: "",
+    raza: "Todos",
+    cantidad: 1,
+    cargos: [],
+    precioManual: null,
+  }, datos||{});
+}
+
+function resetDictarForm(){
+  document.getElementById('dictado').value = "";
+  document.getElementById('parseError').style.display = 'none';
+  document.getElementById('f-dueno').value = "";
+  document.getElementById('f-mascota').value = "";
+  document.getElementById('f-tamano').value = "";
+  document.getElementById('f-raza').value = "";
+  document.getElementById('f-fecha-servicio').value = new Date().toISOString().slice(0,10);
+  document.getElementById('f-notas').value = "";
+  state.currentLines = [nuevaLinea({tipo:"Grooming", nivel: nivelesDeTipo("Grooming")[0] || "Básico"})];
+  renderLineItems();
+  recalcular();
+}
+
+function renderLineItems(){
+  const wrap = document.getElementById('lineitems');
+  wrap.innerHTML = "";
+  state.currentLines.forEach(line=>{
+    const div = document.createElement('div');
+    div.className = 'lineitem';
+    div.dataset.id = line._id;
+
+    const showTamano = TIPOS_CON_TAMANO.includes(line.tipo);
+    const cantidadLabel = TIPOS_CON_CANTIDAD[line.tipo];
+
+    let html = `<div class="lineitem-head"><span class="tag">${line.tipo}</span><button class="remove-line" data-remove="${line._id}">Quitar</button></div>`;
+    html += `<label>Tipo de servicio</label><select data-f="tipo">${TIPOS.map(t=>`<option ${t===line.tipo?'selected':''}>${t}</option>`).join('')}</select>`;
+    html += `<label>Nivel / servicio</label><select data-f="nivel">${nivelesDeTipo(line.tipo).map(n=>`<option ${n===line.nivel?'selected':''}>${n}</option>`).join('')}</select>`;
+
+    if(showTamano){
+      html += `<div class="row2">`;
+      html += `<div><label>Tamaño</label><select data-f="tamano"><option value="">—</option>${["Pequeño","Mediano","Grande","Extra Grande"].map(t=>`<option ${t===line.tamano?'selected':''}>${t}</option>`).join('')}</select></div>`;
+      html += `<div><label>Raza</label><input type="text" data-f="raza" value="${line.raza||''}" placeholder="Todos"></div>`;
+      html += `</div>`;
+    }
+    if(cantidadLabel){
+      html += `<label>Cantidad (${cantidadLabel})</label><input type="number" min="1" data-f="cantidad" value="${line.cantidad||1}">`;
+    }
+    if(line.tipo==="Grooming"){
+      html += `<label style="margin-bottom:4px">Cargos adicionales</label>`;
+      ["Deshedding","Nudos","Pulgas y Garrapatas"].forEach(c=>{
+        html += `<div class="checkrow"><input type="checkbox" data-cargo="${c}" ${line.cargos.includes(c)?'checked':''} id="cargo-${line._id}-${c.replace(/\s/g,'')}"><label for="cargo-${line._id}-${c.replace(/\s/g,'')}" style="margin:0;text-transform:none;font-weight:400;color:var(--ink);font-size:.88rem">${c}</label></div>`;
+      });
+    }
+    html += `<label>Precio manual (opcional — sobrescribe el catálogo)</label><input type="number" step="0.01" data-f="precioManual" value="${line.precioManual===null?'':line.precioManual}" placeholder="Dejar vacío para usar catálogo">`;
+    html += `<div class="subtotal-line" data-subtotal>Subtotal <b>—</b></div>`;
+
+    div.innerHTML = html;
+    wrap.appendChild(div);
+  });
+  wireLineEvents();
+}
+
+function wireLineEvents(){
+  document.querySelectorAll('#lineitems .lineitem').forEach(div=>{
+    const id = Number(div.dataset.id);
+    const line = state.currentLines.find(l=>l._id===id);
+
+    div.querySelectorAll('[data-f]').forEach(el=>{
+      el.addEventListener('input', ()=>{
+        const f = el.dataset.f;
+        if(f==='cantidad') line.cantidad = Number(el.value)||1;
+        else if(f==='precioManual') line.precioManual = el.value===''? null : Number(el.value);
+        else line[f] = el.value;
+        if(f==='tipo'){
+          line.nivel = nivelesDeTipo(line.tipo)[0] || "";
+          renderLineItems();
+        }
+        recalcular();
+      });
+    });
+    div.querySelectorAll('[data-cargo]').forEach(el=>{
+      el.addEventListener('change', ()=>{
+        const c = el.dataset.cargo;
+        if(el.checked){ if(!line.cargos.includes(c)) line.cargos.push(c); }
+        else{ line.cargos = line.cargos.filter(x=>x!==c); }
+        recalcular();
+      });
+    });
+    const rm = div.querySelector('[data-remove]');
+    if(rm) rm.addEventListener('click', ()=>{
+      state.currentLines = state.currentLines.filter(l=>l._id!==id);
+      renderLineItems();
+      recalcular();
+    });
+  });
+}
+
+function calcularLinea(line){
+  const detalles = [];
+  let subtotal = 0;
+  let approxFlag = false, missingFlag = false;
+
+  if(line.precioManual!==null && line.precioManual!==undefined && line.precioManual!==''){
+    subtotal = Number(line.precioManual) * (TIPOS_CON_CANTIDAD[line.tipo]?(line.cantidad||1):1);
+    detalles.push(`${line.tipo} - ${line.nivel} (precio manual) x${TIPOS_CON_CANTIDAD[line.tipo]?(line.cantidad||1):1}: ${money(subtotal)}`);
+  } else {
+    const base = buscarPrecio(line.tipo, line.nivel, TIPOS_CON_TAMANO.includes(line.tipo)?line.tamano:"N/A", line.raza||"Todos");
+    const cant = TIPOS_CON_CANTIDAD[line.tipo] ? (line.cantidad||1) : 1;
+    if(!base.encontrado){
+      missingFlag = true;
+      detalles.push(`${line.tipo} - ${line.nivel}: sin precio definido — ingresa un precio manual`);
+    } else {
+      const linePrice = base.precio * cant;
+      subtotal += linePrice;
+      if(!base.exacto) approxFlag = true;
+      detalles.push(`${line.tipo} - ${line.nivel}${cant>1?` x${cant}`:''}: ${money(linePrice)}${!base.exacto?' (aproximado)':''}`);
+    }
+    if(line.tipo==="Grooming" && line.cargos && line.cargos.length){
+      line.cargos.forEach(c=>{
+        const addon = buscarPrecio("Grooming", c, line.tamano, "Todos");
+        if(!addon.encontrado){
+          missingFlag = true;
+          detalles.push(`+ ${c}: sin precio definido`);
+        } else {
+          subtotal += addon.precio;
+          detalles.push(`+ ${c}: ${money(addon.precio)}`);
+        }
+      });
+    }
+  }
+  return {subtotal, detalles, approxFlag, missingFlag};
+}
+
+function recalcular(){
+  let total = 0;
+  let anyApprox = false, anyMissing = false;
+  const allDetails = [];
+  state.currentLines.forEach(line=>{
+    const r = calcularLinea(line);
+    total += r.subtotal;
+    if(r.approxFlag) anyApprox = true;
+    if(r.missingFlag) anyMissing = true;
+    allDetails.push(...r.detalles);
+    const div = document.querySelector(`#lineitems .lineitem[data-id="${line._id}"] [data-subtotal]`);
+    if(div) div.innerHTML = `Subtotal <b>${money(r.subtotal)}</b>${r.approxFlag?'<span class="flag flag-approx">aproximado</span>':''}${r.missingFlag?'<span class="flag flag-missing">falta precio</span>':''}`;
+  });
+  document.getElementById('r-total').textContent = money(total);
+  const linesWrap = document.getElementById('r-lines');
+  linesWrap.innerHTML = allDetails.map(d=>`<div class="r-row">${d}</div>`).join('');
+  document.getElementById('btnSave').disabled = anyMissing;
+  document.getElementById('btnSave').textContent = anyMissing ? "Completa los precios pendientes para guardar" : "Guardar cobro";
+  return total;
+}
+
+/* ============================================================
+   EVENTOS PRINCIPALES
+   ============================================================ */
+document.getElementById('btnParse').addEventListener('click', async ()=>{
+  const texto = document.getElementById('dictado').value.trim();
+  const errBox = document.getElementById('parseError');
+  errBox.style.display = 'none';
+  if(!state.apiKey){
+    updateKeyNotice();
+    toast("Agrega tu clave de API en Configuración primero");
+    return;
+  }
+  if(!texto){ toast("Dicta o escribe algo primero"); return; }
+  const btn = document.getElementById('btnParse');
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span> Interpretando...`;
+  try{
+    const parsed = await interpretarDictado(texto);
+    poblarDesdeParseo(parsed);
+    toast("Dictado interpretado — revisa antes de guardar");
+  }catch(e){
+    errBox.style.display = 'block';
+    errBox.textContent = e.message==="NO_KEY"
+      ? "Falta la clave de API — agrégala en Configuración."
+      : "No se pudo interpretar el dictado (" + e.message + "). Puedes llenar los campos manualmente abajo.";
+  }finally{
+    btn.disabled = false;
+    btn.textContent = "Interpretar y llenar";
+  }
+});
+
+document.getElementById('btnAddLine').addEventListener('click', ()=>{
+  state.currentLines.push(nuevaLinea({tipo:"Grooming", nivel:nivelesDeTipo("Grooming")[0]}));
+  renderLineItems();
+  recalcular();
+});
+
+document.getElementById('btnCancelReview').addEventListener('click', ()=>{
+  resetDictarForm();
+  toast("Formulario limpio");
+});
+
+document.getElementById('btnSave').addEventListener('click', ()=>{
+  const total = recalcular();
+  if(document.getElementById('btnSave').disabled) return;
+  const txn = {
+    id: Date.now(),
+    createdAt: new Date().toISOString(),
+    fechaServicio: document.getElementById('f-fecha-servicio').value || new Date().toISOString().slice(0,10),
+    dueno: document.getElementById('f-dueno').value || "(sin nombre)",
+    mascota: document.getElementById('f-mascota').value || "(sin nombre)",
+    tamano: document.getElementById('f-tamano').value,
+    raza: document.getElementById('f-raza').value,
+    notas: document.getElementById('f-notas').value,
+    lineas: state.currentLines.map(l=>({tipo:l.tipo, nivel:l.nivel, tamano:l.tamano, raza:l.raza, cantidad:l.cantidad, cargos:l.cargos, precioManual:l.precioManual})),
+    total,
+  };
+  state.transactions.unshift(txn);
+  saveTransactions();
+  toast("Cobro guardado — " + money(total));
+  resetDictarForm();
+  renderHistorial();
+});
+
+/* ============================================================
+   HISTORIAL
+   ============================================================ */
+function renderHistorial(){
+  updateBackupReminder();
+  const list = document.getElementById('txn-list');
+  const total = state.transactions.reduce((a,t)=>a+t.total,0);
+  document.getElementById('sum-count').textContent = state.transactions.length;
+  document.getElementById('sum-total').textContent = money(total);
+  if(state.transactions.length===0){
+    list.innerHTML = `<div class="empty"><b>Todavía no hay cobros</b>Los servicios que guardes en la pestaña Dictar aparecerán aquí.</div>`;
+    return;
+  }
+  list.innerHTML = state.transactions.map(t=>{
+    const servicios = t.lineas.map(l=>l.nivel).join(", ");
+    return `<div class="txn">
+      <div>
+        <div class="tname">${t.mascota} — ${t.dueno}</div>
+        <div class="tmeta">${t.fechaServicio} · ${servicios}</div>
+      </div>
+      <div class="tprice mono">${money(t.total)}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   CONFIGURACIÓN
+   ============================================================ */
+function renderConfig(){
+  document.getElementById('cfg-name').value = state.businessName;
+  const pending = state.catalog.filter(r=>r.pending);
+  const banner = document.getElementById('pending-banner');
+  if(pending.length){
+    banner.style.display = 'block';
+    document.getElementById('pending-list').textContent = pending.map(r=>`${r.tipo} - ${r.nivel} (${r.tamano})`).join(", ") + ". Añade el precio abajo o usa el precio manual en cada línea mientras tanto.";
+  } else {
+    banner.style.display = 'none';
+  }
+
+  const editor = document.getElementById('catalog-editor');
+  editor.innerHTML = "";
+  TIPOS.forEach(tipo=>{
+    const rows = state.catalog.filter(r=>r.tipo===tipo);
+    if(!rows.length) return;
+    const group = document.createElement('div');
+    group.className = 'catalog-group';
+    let html = `<h3>${tipo}</h3>`;
+    rows.forEach(r=>{
+      html += `<div class="catalog-row" data-row="${r.id}">
+        <input type="text" data-cf="nivel" value="${r.nivel}">
+        <input type="text" data-cf="tamano" value="${r.tamano}">
+        <input type="text" data-cf="raza" value="${r.raza}">
+        <input type="number" step="0.01" data-cf="precio" value="${r.precio===null?'':r.precio}" placeholder="${r.pending?'pendiente':''}">
+        <button class="del" data-delrow="${r.id}" title="Eliminar">×</button>
+      </div>`;
+    });
+    group.innerHTML = html;
+    editor.appendChild(group);
+  });
+
+  editor.querySelectorAll('[data-cf]').forEach(el=>{
+    el.addEventListener('change', async ()=>{
+      const rowDiv = el.closest('[data-row]');
+      const id = Number(rowDiv.dataset.row);
+      const row = state.catalog.find(r=>r.id===id);
+      const f = el.dataset.cf;
+      if(f==='precio'){
+        row.precio = el.value===''? null : Number(el.value);
+        row.pending = row.precio===null;
+      } else {
+        row[f] = el.value;
+      }
+      await saveCatalog();
+      renderConfig();
+      toast("Precio actualizado");
+    });
+  });
+  editor.querySelectorAll('[data-delrow]').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      const id = Number(el.dataset.delrow);
+      state.catalog = state.catalog.filter(r=>r.id!==id);
+      await saveCatalog();
+      renderConfig();
+    });
+  });
+}
+
+document.getElementById('btnSaveName').addEventListener('click', async ()=>{
+  state.businessName = document.getElementById('cfg-name').value || "Panel de Servicios";
+  document.getElementById('brandName').textContent = state.businessName;
+  await saveSettings();
+  toast("Nombre guardado");
+});
+
+document.getElementById('btnSaveKey').addEventListener('click', async ()=>{
+  state.apiKey = document.getElementById('cfg-apikey').value.trim();
+  await saveSettings();
+  updateKeyNotice();
+  toast(state.apiKey ? "Clave guardada" : "Clave eliminada");
+});
+
+document.getElementById('cfg-backup-days').addEventListener('change', async (ev)=>{
+  state.backupReminderDays = Number(ev.target.value);
+  await saveSettings();
+  updateBackupReminder();
+  toast("Frecuencia de recordatorio guardada");
+});
+
+document.getElementById('btnAddRow').addEventListener('click', async ()=>{
+  const maxId = Math.max(0, ...state.catalog.map(r=>r.id));
+  state.catalog.push({id:maxId+1, tipo:"Grooming", nivel:"Nuevo nivel", tamano:"Pequeño", raza:"Todos", precio:0});
+  await saveCatalog();
+  renderConfig();
+});
+
+document.getElementById('btnResetCatalog').addEventListener('click', async ()=>{
+  state.catalog = JSON.parse(JSON.stringify(CATALOG_DEFAULT));
+  await saveCatalog();
+  renderConfig();
+  toast("Lista de precios restaurada");
+});
+
+function exportarRespaldo(){
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    businessName: state.businessName,
+    catalog: state.catalog,
+    transactions: state.transactions,
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const fecha = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `respaldo-panel-servicios-${fecha}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  state.lastBackupAt = new Date().toISOString();
+  saveSettings();
+  updateBackupReminder();
+  toast("Respaldo descargado");
+}
+document.getElementById('btnExport').addEventListener('click', exportarRespaldo);
+document.getElementById('btnBackupFromReminder').addEventListener('click', exportarRespaldo);
+
+document.getElementById('btnImport').addEventListener('click', ()=>{
+  document.getElementById('fileImport').click();
+});
+document.getElementById('fileImport').addEventListener('change', (ev)=>{
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async ()=>{
+    try{
+      const backup = JSON.parse(reader.result);
+      if(!confirm("Esto reemplazará los precios y el historial actuales en este teléfono con los del respaldo. ¿Continuar?")) return;
+      if(backup.businessName) state.businessName = backup.businessName;
+      if(backup.catalog) state.catalog = backup.catalog;
+      if(backup.transactions) state.transactions = backup.transactions;
+      state.lastBackupAt = new Date().toISOString();
+      await saveSettings();
+      await saveCatalog();
+      await saveTransactions();
+      document.getElementById('brandName').textContent = state.businessName;
+      renderConfig();
+      renderHistorial();
+      toast("Respaldo importado");
+    }catch(e){
+      toast("El archivo no es un respaldo válido");
+    }
+  };
+  reader.readAsText(file);
+  ev.target.value = '';
+});
+
+/* ============================================================
+   NAVEGACIÓN
+   ============================================================ */
+const tablines = {dictar:"Dictar servicio", historial:"Historial de cobros", config:"Configuración"};
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-'+btn.dataset.tab).classList.add('active');
+    document.getElementById('tabline').textContent = tablines[btn.dataset.tab];
+    if(btn.dataset.tab==='historial') renderHistorial();
+    if(btn.dataset.tab==='config') renderConfig();
+  });
+});
+
+/* ============================================================
+   INICIO
+   ============================================================ */
+(function init(){
+  loadAll();
+  resetDictarForm();
+  renderHistorial();
+  renderConfig();
+})();
+</script>
+</body>
+</html>
