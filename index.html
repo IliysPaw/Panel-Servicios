@@ -242,7 +242,7 @@
         </div>
         <div>
           <label for="f-raza">Raza</label>
-          <input type="text" id="f-raza" placeholder="Todos">
+          <select id="f-raza"></select>
         </div>
       </div>
       <div class="row2">
@@ -462,6 +462,7 @@ function loadAll(){
   document.getElementById('cfg-apikey').value = state.apiKey;
   document.getElementById('cfg-backup-days').value = state.backupReminderDays;
   updateKeyNotice();
+  renderRazaOptions();
 }
 function saveSettings(){
   lsSet('settings', {businessName: state.businessName, apiKey: state.apiKey, backupReminderDays: state.backupReminderDays, lastBackupAt: state.lastBackupAt});
@@ -514,6 +515,27 @@ function nivelesDeTipo(tipo){
 function razasDeNivel(tipo,nivel,tamano){
   const set = new Set(state.catalog.filter(r=>r.tipo===tipo && r.nivel===nivel && (r.tamano===tamano||r.tamano==="N/A")).map(r=>r.raza));
   return [...set];
+}
+function razasDisponibles(){
+  const set = new Set(state.catalog.filter(r=>r.tipo==="Grooming").map(r=>r.raza));
+  set.add("Todos");
+  set.add("N/A");
+  const arr = [...set];
+  arr.sort((a,b)=>{
+    if(a==="Todos") return -1;
+    if(b==="Todos") return 1;
+    if(a==="N/A") return 1;
+    if(b==="N/A") return -1;
+    return a.localeCompare(b, 'es');
+  });
+  return arr;
+}
+function renderRazaOptions(){
+  const sel = document.getElementById('f-raza');
+  const opciones = razasDisponibles();
+  const current = sel.value;
+  sel.innerHTML = opciones.map(r=>`<option value="${r}">${r}</option>`).join('');
+  sel.value = opciones.includes(current) ? current : "Todos";
 }
 
 /* motor de precios: busca fila exacta, si no existe cae a raza "Todos",
@@ -571,18 +593,22 @@ function buscarPrecio(tipo, nivel, tamano, razaInput){
 async function interpretarDictado(texto){
   if(!state.apiKey) throw new Error("NO_KEY");
   const niveles = [...new Set(state.catalog.map(r=>`${r.tipo}:${r.nivel}`))].join(", ");
+  const razas = razasDisponibles().join(", ");
   const hoy = new Date().toISOString().slice(0,10);
   const sys = `Eres un asistente que convierte dictado hablado de un negocio de grooming y cuido de mascotas en Puerto Rico en JSON estructurado.
 
-El dictado puede venir en español, en inglés, o en Spanglish con acento puertorriqueño — mezclando ambos idiomas en la misma oración, con préstamos del inglés (grooming, book, daycare, drop off, pick up), contracciones y expresiones boricuas (pa'l, pa'lla, na' más, en lo que, ahorita, mai, brutal, wepa) y con variación fonética típica de dictado por voz en PR. Interpreta el significado, no la ortografía exacta — si algo suena como "un yorki chiquito" o "un yorkshire pequeñito", ambos significan raza Yorkshire, tamaño Pequeño.
+El dictado puede venir en español, en inglés, o en Spanglish con acento puertorriqueño — mezclando ambos idiomas en la misma oración, con préstamos del inglés (grooming, book, daycare, drop off, pick up), contracciones y expresiones boricuas (pa'l, pa'lla, na' más, en lo que, ahorita, mai, brutal, wepa) y con variación fonética típica de dictado por voz en PR. Interpreta el significado, no la ortografía exacta.
 
 Hoy es ${hoy} (usa esto para interpretar fechas relativas como "mañana", "el viernes que viene", "next Friday").
 Tipos de servicio válidos: Grooming, Daycare, Hospedaje, Domicilio, Entrenamiento, Uñas.
 Niveles de servicio conocidos (tipo:nivel) que existen en el catálogo, incluyendo tarifas especiales por nombre de cliente: ${niveles}.
 Si el dictado menciona un nombre que coincide con uno de estos niveles especiales, sugiere ese nivel exacto.
 El tamaño "Extra Grande" solo existe para el servicio de Baño independiente (tipo Grooming, nivel Baño) — no lo sugieras para otros niveles de Grooming.
+
+IMPORTANTE sobre la raza: el campo "raza" del JSON NO es el nombre literal de la raza del perro — es la categoría de PRECIO a la que pertenece, y debe ser exactamente una de estas: ${razas}. La gran mayoría de razas (yorkie, labrador, poodle, chihuahua, pastor alemán, etc.) usan "Todos" porque no tienen tarifa especial. Usa "Doodle" para goldendoodle, labradoodle, bernedoodle, o cualquier mezcla doodle. Usa "Salchicha" para dachshund o perro salchicha. Usa "Schnauzer" o "Sato" solo si el catálogo los tiene listados arriba y el dictado los menciona explícitamente. Si el dictado sí menciona el nombre real de la raza (ej. "yorkie", "pastor alemán"), inclúyelo aparte en el campo "raza_detalle" para que quede en el registro — "raza" sigue siendo la categoría de precio ("Todos" en ese caso), nunca el nombre literal.
+
 Responde ÚNICAMENTE con un objeto JSON válido, sin texto adicional, sin marcadores de código, con esta forma exacta:
-{"dueno":string|null,"mascota":string|null,"tamano":"Pequeño"|"Mediano"|"Grande"|"Extra Grande"|null,"raza":string|null,"fecha_servicio":"YYYY-MM-DD"|null,"notas":string|null,
+{"dueno":string|null,"mascota":string|null,"tamano":"Pequeño"|"Mediano"|"Grande"|"Extra Grande"|null,"raza":string|null,"raza_detalle":string|null,"fecha_servicio":"YYYY-MM-DD"|null,"notas":string|null,
 "lineas":[{"tipo":string,"nivel_sugerido":string|null,"cargos_adicionales":string[],"cantidad":number|null,"fecha_inicio":"YYYY-MM-DD"|null,"fecha_fin":"YYYY-MM-DD"|null}]}
 cargos_adicionales solo aplica a líneas de tipo Grooming y solo puede contener: "Deshedding","Nudos","Pulgas y Garrapatas".
 Si el dictado no da información suficiente para un campo, usa null. No inventes datos que no fueron dictados.`;
@@ -619,9 +645,17 @@ function poblarDesdeParseo(parsed){
   document.getElementById('f-dueno').value = parsed.dueno || "";
   document.getElementById('f-mascota').value = parsed.mascota || "";
   document.getElementById('f-tamano').value = parsed.tamano || "";
-  document.getElementById('f-raza').value = parsed.raza || "";
+
+  const razaSel = document.getElementById('f-raza');
+  const opcionesRaza = razasDisponibles();
+  razaSel.value = (parsed.raza && opcionesRaza.includes(parsed.raza)) ? parsed.raza : "Todos";
+
   document.getElementById('f-fecha-servicio').value = parsed.fecha_servicio || new Date().toISOString().slice(0,10);
-  document.getElementById('f-notas').value = parsed.notas || "";
+  let notas = parsed.notas || "";
+  if(parsed.raza_detalle){
+    notas = notas ? `${notas} — Raza dictada: ${parsed.raza_detalle}` : `Raza dictada: ${parsed.raza_detalle}`;
+  }
+  document.getElementById('f-notas').value = notas;
 
   state.currentLines = [];
   const lineasFuente = (parsed.lineas && parsed.lineas.length) ? parsed.lineas : [{tipo:"Grooming", nivel_sugerido:"Básico", cargos_adicionales:[], cantidad:1}];
@@ -666,7 +700,7 @@ function resetDictarForm(){
   document.getElementById('f-dueno').value = "";
   document.getElementById('f-mascota').value = "";
   document.getElementById('f-tamano').value = "";
-  document.getElementById('f-raza').value = "";
+  document.getElementById('f-raza').value = "Todos";
   document.getElementById('f-fecha-servicio').value = new Date().toISOString().slice(0,10);
   document.getElementById('f-notas').value = "";
   state.currentLines = [nuevaLinea({tipo:"Grooming", nivel: nivelesDeTipo("Grooming")[0] || "Básico"})];
@@ -760,7 +794,7 @@ function calcularLinea(line){
     const cant = TIPOS_CON_CANTIDAD[line.tipo] ? (line.cantidad||1) : 1;
     if(!base.encontrado){
       missingFlag = true;
-      detalles.push(`${line.tipo} - ${line.nivel}: sin precio definido — ingresa un precio manual`);
+      detalles.push(`${line.tipo} - ${line.nivel}: sin tarifa para ${tamanoGeneral||'este tamaño'} / ${razaGeneral} — ingresa un precio manual o revisa el nivel`);
     } else {
       const linePrice = base.precio * cant;
       subtotal += linePrice;
@@ -836,7 +870,7 @@ document.getElementById('btnParse').addEventListener('click', async ()=>{
 });
 
 document.getElementById('f-tamano').addEventListener('change', recalcular);
-document.getElementById('f-raza').addEventListener('input', recalcular);
+document.getElementById('f-raza').addEventListener('change', recalcular);
 
 document.getElementById('btnAddLine').addEventListener('click', ()=>{
   state.currentLines.push(nuevaLinea({tipo:"Grooming", nivel:nivelesDeTipo("Grooming")[0]}));
@@ -900,6 +934,7 @@ function renderHistorial(){
    CONFIGURACIÓN
    ============================================================ */
 function renderConfig(){
+  renderRazaOptions();
   document.getElementById('cfg-name').value = state.businessName;
   const pending = state.catalog.filter(r=>r.pending);
   const banner = document.getElementById('pending-banner');
